@@ -529,7 +529,13 @@ func OrderMigrations(migrations []Migration) ([]Migration, error) {
 }
 
 func ManifestHash(manifest Manifest) (string, error) {
-	canonical, err := json.Marshal(manifest)
+	normalized := manifest
+	normalized.Environments = manifest.SortedEnvironments()
+	normalized.Components = append([]Component(nil), manifest.Components...)
+	sort.SliceStable(normalized.Components, func(i, j int) bool {
+		return normalized.Components[i].Name < normalized.Components[j].Name
+	})
+	canonical, err := json.Marshal(normalized)
 	if err != nil {
 		return "", err
 	}
